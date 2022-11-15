@@ -202,7 +202,7 @@ app.get("/dtv/id/channels", async (req, res) => {
             area = {"mux_id": service_id, "alias": [], "transmitters":tv_tx,"channels":tv_ch}
             areas[service_id] = area
             
-            await fs.writeFile("./areas.json", JSON.stringify(areas, null, 4))
+            await fs.writeFile(path.join(__dirname, "/areas.json"), JSON.stringify(areas, null, 4))
             return res.status(200).json(area)
         } else {
             return res.status(200).json(area)
