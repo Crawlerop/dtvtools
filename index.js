@@ -9,7 +9,7 @@ const geoip = require("geoip-lite")
 const nc = require("nominatim-client")
 const axios = require("axios")
 const express = require("express")
-const areas = require("./areas.json")
+var areas = require("./areas.json")
 const fs = require("fs/promises")
 
 const app = express()
