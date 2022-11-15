@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Indonesia DTV Info</title>
+        <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+    </head>
+    <body>
+
+        <p>Lat/Lng: <input type="text" id="location" size="16">
+        <button id="getregion">Get Digital TV region</button>
+        <button id="getchannels">Get channels for this region</button>
+        <button id="getchannels_b">Get channels for this region (from sinyaltvdigital)</button></p>        
+        <p><div id="results"></div></p>
+        <script>
+            const doCheckRegion = (j) => {$("#results").html(`<b>Region: ${j.region}</b>`)}
+
+            const doCheckRegionIP = () => {
+                $.get("/dtv/id/region").done((j) => {
+                    doCheckRegion(j)
+                })
+            }
+            const doCheckRegionGPS = (p) => {
+                $.get(`/dtv/id/region?lat=${p.coords.latitude}&lng=${p.coords.longitude}`).done((j) => {
+                    doCheckRegion(j)
+                })
+            }
+
+            $("#getregion").on("click", () => {                
+                if (!$("#location").val()) {
+                    $("#results").empty()
+                    if (!navigator.geolocation) {
+                        doCheckRegionIP()
+                    } else {
+                        navigator.geolocation.getCurrentPosition(doCheckRegionGPS, doCheckRegionIP)
+                    }
+                } else {
+                    const lat = parseFloat($("#location").val().split(",")[0])
+                    const lng = parseFloat($("#location").val().split(",")[1])
+
+                    $("#results").empty()
+                    $.get(`/dtv/id/region?lat=${lat}&lng=${lng}`).done((j) => {
+                        doCheckRegion(j)
+                    })
+                }                                 
+            })
+
+            const doCheckChannels = (j) => {
+                var tmp_result = "<h2>Transmitters:</h2>"
+                var tx_map = {}
+
+                for (i = 0; i<j.transmitters.length; i++) {
+                    tmp_result += `<p><a href="${j.transmitters[i].website}">${j.transmitters[i].name}</a> @ ${j.transmitters[i].frequency}mhz in ${j.transmitters[i].lat},${j.transmitters[i].lng}</p>`
+                    tx_map[j.transmitters[i].id] = j.transmitters[i]
+                }
+                tmp_result += `<h2>Channels:</h2>`
+                for (i = 0; i<j.channels.length; i++) {                            
+                    if (!j.channels[i].repeater) {
+                        tmp_result += `<p><a href="https://dvb.ucomsite.my.id/mux/${j.mux_id}/${j.channels[i].channel_id}">${j.channels[i].channel_name}</a> @ ${j.channels[i].quality} via ${tx_map[j.channels[i].via].name}`                            
+                        if (j.channels[i].stream_urls.length > 0) {
+                            for (k = 0; k<j.channels[i].stream_urls.length; k++) {
+                                tmp_result += ` <a href="${j.channels[i].stream_urls[k]}">Live stream ${k+1}</a>`
+                            }
+                        }
+                        tmp_result += "</p>"
+                    } else {
+                        tmp_result += `<p>Repeater @ ${tx_map[j.channels[i].via].name} to ${tx_map[j.channels[i].repeater].name}`                            
+                    }
+                }
+                $("#results").html(tmp_result)
+            }
+
+            const doCheckChannelsIP = () => {
+                $.get("/dtv/id/channels").done((j) => {
+                    //$("#results").html(`<b>Region: ${j.region}</b>`)
+                    doCheckChannels(j)
+                })
+            }
+            const doCheckChannelsGPS = (p) => {
+                $.get(`/dtv/id/channels?lat=${p.coords.latitude}&lng=${p.coords.longitude}`).done((j) => {
+                    doCheckChannels(j)
+                })
+            }
+
+            $("#getchannels").on("click", () => {
+                if (!$("#location").val()) {
+                    $("#results").empty()
+                    if (!navigator.geolocation) {
+                        doCheckChannelsIP();
+                    } else {
+                        navigator.geolocation.getCurrentPosition(doCheckChannelsGPS, doCheckChannelsIP)
+                    }
+                } else {
+                    const lat = parseFloat($("#location").val().split(",")[0])
+                    const lng = parseFloat($("#location").val().split(",")[1])
+
+                    $("#results").empty()
+                    $.get(`/dtv/id/channels?lat=${lat}&lng=${lng}`).done((j) => {
+                        //$("#results").html(`<b>Region: ${j.region}</b>`)
+                        doCheckChannels(j)                        
+                    })
+                }   
+            })
+
+            const doCheckChannels_sinyaltvdigital = (j) => {
+                var tmp_result = "<h2>Transmitters:</h2>"
+                for (i = 0; i<j.transmitters.length; i++) {
+                    tmp_result += `<p>${j.transmitters[i].name} @ ${j.transmitters[i].frequency}mhz in ${j.transmitters[i].latitude},${j.transmitters[i].longitude}</p>`
+                }
+                tmp_result += `<h2>Channels:</h2>`
+                for (i = 0; i<j.channels.length; i++) {                            
+                    if (!j.channels[i].repeater) {
+                        tmp_result += `<p>${j.channels[i].name} @ ${j.channels[i].quality} via ${j.channels[i].antenna}</p>`                            
+                    }
+                }
+                $("#results").html(tmp_result)
+            }
+
+            const doCheckChannels_sinyaltvdigitalIP = () => {
+                $.get("/dtv/id/area_channels").done((j) => {
+                    doCheckChannels_sinyaltvdigital(j)
+                })
+            }
+
+            const doCheckChannels_sinyaltvdigitalGPS = (p) => {
+                $.get(`/dtv/id/area_channels?lat=${p.coords.latitude}&lng=${p.coords.longitude}`).done((j) => {
+                    //$("#results").html(`<b>Region: ${j.region}</b>`)
+                    doCheckChannels_sinyaltvdigital(j)
+                })
+            }
+
+            $("#getchannels_b").on("click", () => {
+                if (!$("#location").val()) {
+                    $("#results").empty()
+                    
+                    if (!navigator.geolocation) {
+                        doCheckChannels_sinyaltvdigitalIP
+                    } else {
+                        navigator.geolocation.getCurrentPosition(doCheckChannels_sinyaltvdigitalGPS, doCheckChannels_sinyaltvdigitalIP)
+                    }
+                } else {
+                    const lat = parseFloat($("#location").val().split(",")[0])
+                    const lng = parseFloat($("#location").val().split(",")[1])
+
+                    $("#results").empty()
+                    $.get(`/dtv/id/area_channels?lat=${lat}&lng=${lng}`).done((j) => {
+                        //$("#results").html(`<b>Region: ${j.region}</b>`)
+                        doCheckChannels_sinyaltvdigital(j)
+                    })
+                }   
+            })
+        </script>
+    </body>
+</html>
