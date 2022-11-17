@@ -92,6 +92,7 @@ app.get("/dtv/id/region", async (req, res) => {
         const coverage = await axios.post("https://digitaltv.kominfo.go.id/executive/get_coverage_map", `antenna[]=${near_tx.id}`)
         return res.status(200).json({"region":coverage.data.data[0].area_service_name})
     } catch (e) {
+        console.trace(e)
         return res.status(500).json(e)
     }
 })
@@ -106,7 +107,7 @@ app.get("/dtv/id/area_channels", async (req, res) => {
             }
             [target_lat, target_lng] = lookup_result.ll
         } else if (req.query.lat && req.query.lng) {
-            const lookup_result = await nominatim.reverse({lat: parseFloat(req.query.lat), lon: parseFloat(req.query.lng)})
+            const lookup_result = await nominatim.reverse({lat: parseFloat(req.query.lat), lon: parseFloat(req.query.lng), zoom: 16})
             if (lookup_result.error || lookup_result.address.country_code.toUpperCase() != "ID") {
                 return res.status(200).json({"transmitters":[],"channels":[]})
             }
@@ -137,6 +138,7 @@ app.get("/dtv/id/area_channels", async (req, res) => {
         const coverage = await axios.post("https://digitaltv.kominfo.go.id/executive/get_coverage_map", `antenna[]=${near_tx.id}`)
         return res.status(200).json({"transmitters":coverage.data.transmitter_in_area,"channels":coverage.data.channel_in_area})
     } catch (e) {
+        console.trace(e)
         return res.status(500).json(e)
     }
 })
@@ -151,7 +153,7 @@ app.get("/dtv/id/channels", async (req, res) => {
             }
             [target_lat, target_lng] = lookup_result.ll
         } else if (req.query.lat && req.query.lng) {
-            const lookup_result = await nominatim.reverse({lat: parseFloat(req.query.lat), lon: parseFloat(req.query.lng)})
+            const lookup_result = await nominatim.reverse({lat: parseFloat(req.query.lat), lon: parseFloat(req.query.lng), zoom: 16})
             if (lookup_result.error || lookup_result.address.country_code.toUpperCase() != "ID") {
                 return res.status(200).json({"mux_id": "out-of-country", "alias": [], "transmitters": [],"channels": []})
             }
@@ -208,6 +210,7 @@ app.get("/dtv/id/channels", async (req, res) => {
             return res.status(200).json(area)
         }
     } catch (e) {
+        console.trace(e)
         return res.status(500).json(e)
     }
 })
