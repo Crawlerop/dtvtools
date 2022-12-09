@@ -11,6 +11,7 @@ const axios = require("axios")
 const express = require("express")
 var areas = require("./areas.json")
 const fs = require("fs/promises")
+const cors = require("cors")
 
 const app = express()
 const nominatim = nc.createClient({
@@ -45,6 +46,18 @@ const getNearestDistance = (lat1, lon1, lat2, lon2, unit) => {
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "/dtvtools.html"))
+})
+
+const geoIp = (ip, res) => {
+    return res.status(200).json(geoip.lookup(ip))
+}
+
+app.get("/geoip/json/", (req, res) => {
+    return geoIp(req.ip, res)
+})
+
+app.get("/geoip/json/:ip", (req, res) => {
+    return geoIp(req.params.ip, res)
 })
 
 app.get("/dtv/id", (req, res) => {
