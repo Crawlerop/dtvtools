@@ -52,11 +52,11 @@ const geoIp = (ip, res) => {
     return res.status(200).json(geoip.lookup(ip))
 }
 
-app.get("/geoip/json/", (req, res) => {
+app.get("/geoip/json/", cors(), (req, res) => {
     return geoIp(req.ip, res)
 })
 
-app.get("/geoip/json/:ip", (req, res) => {
+app.get("/geoip/json/:ip", cors(), (req, res) => {
     return geoIp(req.params.ip, res)
 })
 
